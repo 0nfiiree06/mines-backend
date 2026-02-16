@@ -110,6 +110,26 @@ def reservar_5():
         if conn:
             release_connection(conn)
 
+#Resetear estados a DISPONIBLE (solo para testing, no exponer en producción)
+@app.post("/reset-estados")
+def reset_estados():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE numeros
+            SET estado = 'DISPONIBLE'
+        """)
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return {"status": "Todos los números actualizados a DISPONIBLE"}
+
+    except Exception as e:
+        return {"error": str(e)}
 
 # ------------------------------
 # ESTADÍSTICAS DASHBOARD
