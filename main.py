@@ -72,7 +72,7 @@ def reservar_5():
             SELECT numero
             FROM numeros
             WHERE estado = 'DISPONIBLE'
-            LIMIT 5
+            LIMIT 20
             FOR UPDATE SKIP LOCKED
         """)
 
