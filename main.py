@@ -1,5 +1,4 @@
 from fastapi import FastAPI, UploadFile, File
-import pandas as pd
 from pydantic import BaseModel
 import psycopg2
 from psycopg2 import pool
