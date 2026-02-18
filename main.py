@@ -99,7 +99,7 @@ def reservar(data: ReservaRequest):
         cursor.close()
 
         return {
-            "reservados": [n[0] for n in actualizados]
+            "reservados": list(actualizados)
         }
 
     except Exception as e:
