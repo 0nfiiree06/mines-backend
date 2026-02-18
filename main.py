@@ -10,7 +10,7 @@ class ReservaRequest(BaseModel):
     cantidad: int
 
 class CancelarRequest(BaseModel):
-    numeros: list[int]
+    numeros: list[str]
 
 # ==============================
 # CONFIGURACIÓN DB
