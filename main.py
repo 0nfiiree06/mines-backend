@@ -124,7 +124,7 @@ def cancalar_reserva(data: CancelarRequest):
         cursosr.execute("""
             UPDATE numeros
             SET estado = 'DISPONIBLE'
-            WHERE numero = ANY(%s)
+            WHERE numero::text = ANY(%s)
             RETURNING numero
         """, (data.numeros,))
 
