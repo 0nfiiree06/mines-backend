@@ -78,7 +78,7 @@ def reservar(data: ReservaRequest):
             WHERE estado = 'DISPONIBLE'
             LIMIT %s
             FOR UPDATE SKIP LOCKED
-        """, (data.cantidad))
+        """, (data.cantidad,))
 
         filas = cursor.fetchall()
 
