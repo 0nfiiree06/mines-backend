@@ -1,9 +1,13 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import psycopg2
 from psycopg2 import pool
 import os
 
 app = FastAPI()
+
+class ReservaRequest(BaseModel):
+    cantidad: int
 
 # ==============================
 # CONFIGURACIÓN DB
@@ -23,7 +27,6 @@ def get_connection():
 def release_connection(conn):
     connection_pool.putconn(conn)
 
-
 # ==============================
 # ENDPOINTS
 # ==============================
@@ -31,7 +34,6 @@ def release_connection(conn):
 @app.get("/")
 def home():
     return {"mensaje": "API Mines funcionando 🚀"}
-
 
 # ------------------------------
 # TEST CONEXIÓN DB
@@ -52,12 +54,11 @@ def db_test():
         if conn:
             release_connection(conn)
 
-
 # ------------------------------
 # RESERVAR 5 MINES
 # ------------------------------
-@app.post("/reservar-5")
-def reservar_5():
+@app.post("/reservar")
+def reservar(data: ReservaRequest):
 
     conn = None
 
@@ -72,9 +73,9 @@ def reservar_5():
             SELECT numero
             FROM numeros
             WHERE estado = 'DISPONIBLE'
-            LIMIT 3
+            LIMIT %s
             FOR UPDATE SKIP LOCKED
-        """)
+        """, (data.cantidad))
 
         filas = cursor.fetchall()
 
