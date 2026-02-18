@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
+import pandas as pd
 from pydantic import BaseModel
 import psycopg2
 from psycopg2 import pool
@@ -8,6 +9,9 @@ app = FastAPI()
 
 class ReservaRequest(BaseModel):
     cantidad: int
+
+class CancelarRequest(BaseModel):
+    numeros: list[int]
 
 # ==============================
 # CONFIGURACIÓN DB
@@ -75,7 +79,7 @@ def reservar(data: ReservaRequest):
             WHERE estado = 'DISPONIBLE'
             LIMIT %s
             FOR UPDATE SKIP LOCKED
-        """, (data.cantidad,))
+        """, (data.cantidad))
 
         filas = cursor.fetchall()
 
@@ -107,6 +111,37 @@ def reservar(data: ReservaRequest):
             conn.rollback()
         return {"error": str(e)}
 
+    finally:
+        if conn:
+            release_connection(conn)
+
+@app.post("/cancelar")
+def cancalar_reserva(data: CancelarRequest):
+    conn = None
+    try:
+        conn = get_connection()
+        cursosr = conn.cursor()
+
+        cursosr.execute("""
+            UPDATE numeros
+            SET estado = 'DISPONIBLE'
+            WHERE numero = ANY(%s)
+            RETURNING numero
+        """, (data.numeros,))
+
+        actualizados = cursosr.fetchall()
+
+        conn.commit()
+        cursosr.close()
+
+        return {
+            "cancelados": [fila[0] for fila in actualizados]
+        }
+    
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return {"error": str(e)}
     finally:
         if conn:
             release_connection(conn)
