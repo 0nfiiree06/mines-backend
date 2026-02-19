@@ -241,3 +241,36 @@ def buscar_consultor(data: BuscarConsultorRequest):
     finally:
         if conn:
             release_connection(conn)
+
+@app.post("/buscar-cliente")
+def buscar_cliente(data: BuscarConsultorRequest):
+    conn = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT razon_social, segmento
+            FROM clientes
+            WHERE nit = %s
+        """, (data.documento,))
+
+        resultado = cursor.fetchone()
+
+        cursor.close()
+
+        if resultado:
+            return {
+                "razon_social": resultado[0],
+                "segmento": resultado[1]
+            }
+        else:
+            return {"mensaje": "Cliente no encontrado"}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+    finally:
+        if conn:
+            release_connection(conn)
