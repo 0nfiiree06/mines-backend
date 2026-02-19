@@ -12,6 +12,9 @@ class ReservaRequest(BaseModel):
 class CancelarRequest(BaseModel):
     numeros: list[str]
 
+class BuscarConsultorRequest(BaseModel):
+    documento: str
+
 # ==============================
 # CONFIGURACIÓN DB
 # ==============================
