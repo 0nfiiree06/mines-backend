@@ -205,3 +205,36 @@ def estadisticas():
     finally:
         if conn:
             release_connection(conn)
+
+@app.post("/buscar-consultor")
+def buscar_consultor(data: BuscarConsultorRequest):
+    conn = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT nombre_consultor, codigo_venta_movil
+            FROM consultores
+            WHERE documento = %s
+        """, (data.documento,))
+
+        resultado = cursor.fetchone()
+
+        cursor.close()
+
+        if resultado:
+            return {
+                "nombre_consultor": resultado[0],
+                "codigo_venta_movil": resultado[1]
+            }
+        else:
+            return {"mensaje": "Consultor no encontrado"}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+    finally:
+        if conn:
+            release_connection(conn)
