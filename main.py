@@ -257,7 +257,7 @@ def buscar_cliente(data: buscarClienteRequest):
             SELECT razon_social, segmento
             FROM clientes
             WHERE nit = %s
-        """, (data.documento,))
+        """, (data.nit,))
 
         resultado = cursor.fetchone()
 
