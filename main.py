@@ -246,7 +246,7 @@ def buscar_consultor(data: BuscarConsultorRequest):
             release_connection(conn)
 
 @app.post("/buscar-cliente")
-def buscar_cliente(data: BuscarConsultorRequest):
+def buscar_cliente(data: buscarClienteRequest):
     conn = None
 
     try:
