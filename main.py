@@ -15,6 +15,9 @@ class CancelarRequest(BaseModel):
 class BuscarConsultorRequest(BaseModel):
     documento: str
 
+class buscarClienteRequest(BaseModel):
+    nit: str
+
 # ==============================
 # CONFIGURACIÓN DB
 # ==============================
