@@ -18,6 +18,13 @@ class BuscarConsultorRequest(BaseModel):
 class buscarClienteRequest(BaseModel):
     nit: str
 
+class AceptarMinesDB(BaseModel):
+    consultor: str
+    consultor_cuenta: str
+    razon_social: str
+    nit: str
+    numeros: list[str]
+    
 # ==============================
 # CONFIGURACIÓN DB
 # ==============================
@@ -277,3 +284,47 @@ def buscar_cliente(data: buscarClienteRequest):
     finally:
         if conn:
             release_connection(conn)
+
+@app.post("/aceptar-mines")
+def aceptar_mines(data: AceptarMinesDB):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        conn.autocommit = False
+
+        cursor.execute("""
+            UPDATE numeros
+            SET 
+                estado = 'ASIGNADO',
+                fecha_asignado = NOW(),
+                consultor = %s,
+                consultor_cuenta = %s,
+                razon_social = %s,
+                nit = %s
+            WHERE numero::text = ANY(%s)
+            RETURNING numero
+        """, (
+            data.consultor,
+            data.consultor_cuenta,
+            data.razon_social,
+            data.nit,
+            data.numeros,
+        ))
+
+        actualizados = cursor.fetchall()
+
+        conn.commit()
+
+        return {
+            "actualizados": [fila[0] for fila in actualizados]
+        }
+
+    except Exception as e:
+        conn.rollback()
+        return {"error": str(e)}
+
+    finally:
+        cursor.close()
+        conn.close()
