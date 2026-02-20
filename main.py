@@ -1,11 +1,12 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, APIRouter
 from pydantic import BaseModel
 import psycopg2
 from psycopg2 import pool
 import os
 
 app = FastAPI()
-router = FastAPI()
+router = APIRouter()
+app.include_router(router)
 
 class ReservaRequest(BaseModel):
     cantidad: int
