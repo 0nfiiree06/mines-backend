@@ -1,12 +1,10 @@
-from fastapi import FastAPI, UploadFile, File, APIRouter
+from fastapi import FastAPI, UploadFile, File
 from pydantic import BaseModel
 import psycopg2
 from psycopg2 import pool
 import os
 
 app = FastAPI()
-router = APIRouter()
-app.include_router(router)
 
 class ReservaRequest(BaseModel):
     cantidad: int
@@ -26,16 +24,7 @@ class AceptarMinesDB(BaseModel):
     razon_social: str
     nit: str
     numeros: list[str]
-
-class MinesResponse(BaseModel):
-    consultor: str | None
-    consultor_cuenta: str | None
-    razon_social: str | None
-    nit: str | None
-    numero: str 
-    estado: str
-
-    
+   
 # ==============================
 # CONFIGURACIÓN DB
 # ==============================
@@ -315,7 +304,13 @@ def aceptar_mines(data: AceptarMinesDB):
                 razon_social = %s,
                 nit = %s
             WHERE numero::text = ANY(%s)
-            RETURNING numero
+            RETURNING 
+                consultor,
+                consultor_cuenta,
+                razon_social,
+                nit,
+                numero,
+                estado
         """, (
             data.consultor,
             data.consultor_cuenta,
@@ -329,7 +324,17 @@ def aceptar_mines(data: AceptarMinesDB):
         conn.commit()
 
         return {
-            "actualizados": [fila[0] for fila in actualizados]
+            "actualizados": [
+                {
+                    "consultor": fila[0],
+                    "consultor_cuenta": fila[1],
+                    "razon_social": fila[2],
+                    "nit": fila[3],
+                    "numero": fila[4],
+                    "estado": fila[5],
+                }
+                for fila in actualizados
+            ]
         }
 
     except Exception as e:
@@ -339,46 +344,3 @@ def aceptar_mines(data: AceptarMinesDB):
     finally:
         cursor.close()
         conn.close()
-
-
-@app.get("/listar-mines", response_model=list[MinesResponse])
-def listar_mines():
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("""
-            SELECT 
-                consultor,
-                consultor_cuenta,
-                razon_social,
-                nit,
-                numero,
-                estado
-            FROM numeros
-            WHERE estado = 'ASIGNADO'
-            ORDER BY fecha_asignado DESC
-        """)
-
-        rows = cursor.fetchall()
-
-        resultado = []
-
-        for row in rows:
-            resultado.append({
-                "consultor": row[0],
-                "consultor_cuenta": row[1],
-                "razon_social": row[2],
-                "nit": row[3],
-                "numero": row[4],
-                "estado": row[5]
-            })
-
-        return resultado
-
-    except Exception as e:
-        return {"error": str(e)}
-
-    finally:
-        cursor.close()
-        release_connection(conn)
