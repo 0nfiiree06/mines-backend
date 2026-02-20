@@ -341,7 +341,7 @@ def aceptar_mines(data: AceptarMinesDB):
         conn.close()
 
 
-@router.get("/listar-mines", response_model=list[MinesResponse])
+@app.get("/listar-mines", response_model=list[MinesResponse])
 def listar_mines():
     conn = get_connection()
     cursor = conn.cursor()
