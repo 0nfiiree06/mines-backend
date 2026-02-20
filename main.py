@@ -348,20 +348,22 @@ def listar_mines():
 
     try:
         cursor.execute("""
-                    SELECT 
-                       consultor,
-                       consultor_cuenta,
-                       razon_social,
-                       nit,
-                       numero,
-                       estado
-                    FROM numeros
-                    ORDER BY fecha_asignado DESC NULLS LAST
-                """)
+            SELECT 
+                consultor,
+                consultor_cuenta,
+                razon_social,
+                nit,
+                numero,
+                estado
+            FROM numeros
+            WHERE estado = 'ASIGNADO'
+            ORDER BY fecha_asignado DESC
+        """)
+
         rows = cursor.fetchall()
 
         resultado = []
-                       
+
         for row in rows:
             resultado.append({
                 "consultor": row[0],
@@ -373,7 +375,7 @@ def listar_mines():
             })
 
         return resultado
-    
+
     except Exception as e:
         return {"error": str(e)}
 
