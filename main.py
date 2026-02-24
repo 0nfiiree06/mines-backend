@@ -6,6 +6,10 @@ import os
 
 app = FastAPI()
 
+@app.on_event("shutdown")
+def shutdown():
+    connection_pool.closeall()
+
 class ReservaRequest(BaseModel):
     cantidad: int
 
@@ -34,7 +38,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 connection_pool = pool.SimpleConnectionPool(
     1,
     10,
-    DATABASE_URL
+    DATABASE_URL,
+    sslmode="require"
 )
 
 def get_connection():
@@ -188,16 +193,16 @@ def estadisticas():
     conn = None
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        conn = connection_pool.getconn()
 
-        cursor.execute("""
-            SELECT estado, COUNT(*)
-            FROM numeros
-            GROUP BY estado
-        """)
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT estado, COUNT(*)
+                FROM numeros
+                GROUP BY estado
+            """)
 
-        resultados = cursor.fetchall()
+            resultados = cursor.fetchall()
 
         stats = {
             "DISPONIBLE": 0,
@@ -208,16 +213,14 @@ def estadisticas():
         for estado, cantidad in resultados:
             stats[estado] = cantidad
 
-        cursor.close()
-
         return stats
 
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))
 
     finally:
         if conn:
-            release_connection(conn)
+            connection_pool.putconn(conn)
 
 @app.post("/buscar-consultor")
 def buscar_consultor(data: BuscarConsultorRequest):
